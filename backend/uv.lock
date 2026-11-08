@@ -34,6 +34,7 @@ dependencies = [
     { name = "mysql-connector-python" },
     { name = "pydantic" },
     { name = "pyjwt" },
+    { name = "python-dotenv" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -44,6 +45,7 @@ requires-dist = [
     { name = "mysql-connector-python", specifier = ">=9.0,<9.1" },
     { name = "pydantic", specifier = ">=2,<3" },
     { name = "pyjwt", specifier = ">=2.9,<3" },
+    { name = "python-dotenv", specifier = ">=1.2,<2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30,<0.31" },
 ]
 
