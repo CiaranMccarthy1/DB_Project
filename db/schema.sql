@@ -69,6 +69,27 @@ CREATE TABLE IF NOT EXISTS character_stats (
     items_used INT UNSIGNED NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS enemy_types (
+    enemy_type_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS enemies (
+    enemy_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    enemy_name VARCHAR(50) NOT NULL,
+    enemy_type_id TINYINT UNSIGNED NOT NULL,
+    chapter_id TINYINT UNSIGNED NOT NULL, 
+    is_boss BOOLEAN NOT NULL DEFAULT FALSE,
+    hp SMALLINT UNSIGNED NOT NULL,
+    melee SMALLINT UNSIGNED NOT NULL,
+    mana SMALLINT UNSIGNED NOT NULL,
+    ranged SMALLINT UNSIGNED NOT NULL,
+    armor SMALLINT UNSIGNED NOT NULL,
+    speed SMALLINT UNSIGNED NOT NULL,
+    xp_reward INT UNSIGNED NOT NULL,
+    drop_item_id TINYINT UNSIGNED NULL
+);
+
 -- creates character classes 
 INSERT INTO character_classes
     (class_id, class_name, description, base_hp, base_melee, base_mana, base_ranged, base_armor, base_speed, attack_a_kind, attack_b_kind)
@@ -88,3 +109,31 @@ VALUES
     (2, 'Green Potion', 'potion_green', 'heal_hp', 100, 99),
     (3, 'Blue Potion', 'potion_blue', 'heal_hp_large', 150, 99),
     (4, 'Purple Potion', 'potion_purple', 'heal_hp_large', 250, 99);
+
+INSERT INTO enemy_types
+    (enemy_type_id, type_name)
+VALUES
+    (1, 'humanoid'),
+    (2, 'beast'),
+    (3, 'undead'),
+    (4, 'demon'),
+    (5, 'ooze'),
+    (6, 'construct');
+
+INSERT INTO enemies
+    (enemy_id, enemy_name, enemy_type_id, chapter_id, is_boss, hp, melee, mana, ranged, armor, speed, xp_reward, drop_item_id)
+VALUES
+    (1, 'Orc', 1, 1, 0, 55, 12, 0, 4, 5, 10, 15, NULL),
+    (2, 'Slime', 5, 1, 0, 45, 6, 0, 0, 3, 6, 10, NULL),
+    (3, 'Bat', 2, 1, 0, 35, 7, 0, 6, 1, 16, 10, NULL),
+    (4, 'Skeleton Archer', 3, 1, 0, 50, 6, 0, 12, 3, 11, 16, NULL),
+    (5, 'Orc Rider', 1, 1, 0, 70, 15, 0, 0, 6, 13, 22, NULL),
+    (6, 'Elite Orc', 1, 1, 1, 140, 20, 0, 6, 10, 11, 70, 1),
+    (7, 'Necromancer', 1, 1, 1, 120, 8, 22, 0, 8, 12, 80, 2),
+    (8, 'Demon', 4, 2, 0, 75, 14, 8, 0, 7, 11, 25, NULL),
+    (9, 'Flying Demon', 4, 2, 0, 65, 8, 10, 10, 5, 15, 24, NULL),
+    (10, 'Hell Hound', 4, 2, 0, 85, 16, 0, 0, 8, 13, 28, NULL),
+    (11, 'Hell Bat', 4, 2, 0, 55, 8, 12, 8, 4, 17, 22, NULL),
+    (12, 'Black Knight on Horse', 3, 2, 1, 200, 24, 0, 0, 16, 10, 140, 3),
+    (13, 'Flame Golem', 6, 2, 1, 240, 20, 0, 0, 20, 7, 160, 3),
+    (14, 'Warlock', 1, 2, 1, 180, 10, 26, 10, 10, 12, 180, 4);
