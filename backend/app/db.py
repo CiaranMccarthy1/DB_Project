@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from typing import Any
 
 from mysql.connector import pooling
 
@@ -26,13 +27,13 @@ def transaction():
         conn.close()
 
 
-def fetch_one(sql: str, params: tuple = ()):
+def fetch_one(sql: str, params: tuple[Any, ...] = ()):
     with transaction() as cur:
         cur.execute(sql, params)
         return cur.fetchone()
 
 
-def fetch_all(sql: str, params: tuple = ()):
+def fetch_all(sql: str, params: tuple[Any, ...] = ()):
     with transaction() as cur:
         cur.execute(sql, params)
         return cur.fetchall()

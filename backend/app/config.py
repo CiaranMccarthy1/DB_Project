@@ -1,11 +1,23 @@
 import os
 from pathlib import Path
+from typing import TypedDict
 
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-DB_CONFIG = {
+
+class DBConfig(TypedDict):
+    host: str
+    port: int
+    user: str
+    password: str
+    database: str
+    charset: str
+    autocommit: bool
+
+
+DB_CONFIG: DBConfig = {
     "host": os.getenv("DB_HOST", "host.docker.internal"),
     "port": int(os.getenv("DB_PORT", "3306")),
     "user": os.getenv("DB_USER", "ashen_app"),
