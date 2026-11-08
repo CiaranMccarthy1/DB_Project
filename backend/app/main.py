@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 
 from .config import CORS_ORIGINS
-from .routes import auth, characters, inventory, levels
+from .routes import auth, characters, combat, demo, inventory, levels
 
 app = FastAPI(title="Ashen Realms API", version="0.1.0")
 
 
-for router in (auth.router, characters.router, levels.router, inventory.router):
+for router in (auth.router, characters.router, levels.router, combat.router, inventory.router, demo.router):
     app.include_router(router)
 
 
