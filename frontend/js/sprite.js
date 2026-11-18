@@ -1,4 +1,6 @@
 const player = document.getElementById('player');
+const sheet = localStorage.getItem('character') || 'Knight/Knight_Idle.png';
+player.style.backgroundImage = `url('assets/${sheet}')`;
 const SPRITE_SIZE = player.offsetWidth;
 
 function moveSprite(x, y) {

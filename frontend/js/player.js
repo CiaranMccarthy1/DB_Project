@@ -1,7 +1,7 @@
 class Player {
   constructor() {
     this.keys = new Set();
-    this.speed = 300;
+    this.speed = 200;
     this.last = 0;
     this.x = (innerWidth - SPRITE_SIZE) / 2;
     this.y = (innerHeight - SPRITE_SIZE) / 2;

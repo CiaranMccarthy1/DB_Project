@@ -12,3 +12,41 @@ body { margin: 0; height: 100vh; overflow: hidden; background: #1b1b1b; }
 @keyframes idle {
   to { background-position: -600px 0; }
 }
+
+.menu {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  color: #e8e8e8;
+  font-family: system-ui, sans-serif;
+}
+
+.menu h1 {
+  margin: 0;
+  font-size: 64px;
+  letter-spacing: 0.08em;
+}
+
+.menu-button {
+  padding: 12px 44px;
+  border: 1px solid #e8e8e8;
+  color: inherit;
+  font-size: 20px;
+  text-decoration: none;
+}
+
+.menu-button:hover {
+  background: #e8e8e8;
+  color: #1b1b1b;
+}
+
+#character {
+  padding: 10px 16px;
+  border: 1px solid #e8e8e8;
+  background: #1b1b1b;
+  color: #e8e8e8;
+  font-size: 18px;
+}

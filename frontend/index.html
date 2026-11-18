@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Ashen</title>
+<title>Java Knight</title>
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-<div id="player"></div>
-<script src="js/sprite.js"></script>
-<script src="js/player.js"></script>
+<main class="menu">
+  <h1>Java Knight</h1>
+  <select id="character">
+    <option value="Knight/Knight_Idle.png">Knight</option>
+    <option value="Priest/Priest_Idle.png">Priest</option>
+    <option value="Archer/Archer_Idle.png">Archer</option>
+    <option value="Soilder/Soldier_Idle.png">Soldier</option>
+    <option value="Wizard/Wizard_Idle.png">Wizard</option>
+  </select>
+  <a class="menu-button" href="game.html">Play</a>
+</main>
+<script src="js/menu.js"></script>
 </body>
 </html>
