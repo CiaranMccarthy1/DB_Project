@@ -6,7 +6,7 @@ from mysql.connector import pooling
 from .config import DB_CONFIG, POOL_SIZE
 
 _pool = pooling.MySQLConnectionPool(
-    pool_name="ashen_pool",
+    pool_name="java_knight_pool",
     pool_size=POOL_SIZE,
     **DB_CONFIG,
 )

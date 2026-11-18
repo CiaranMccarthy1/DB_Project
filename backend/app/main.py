@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import CORS_ORIGINS
 from .routes import auth, characters, combat, demo, inventory, levels
 
-app = FastAPI(title="Ashen Realms API", version="0.1.0")
+app = FastAPI(title="Java Knight API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,9 +1,9 @@
 SET default_storage_engine = InnoDB;
 
-CREATE DATABASE IF NOT EXISTS ashen_realms
+CREATE DATABASE IF NOT EXISTS java_knight_realms
     CHARACTER SET utf8mb4;
 
-USE ashen_realms;
+USE java_knight_realms;
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
