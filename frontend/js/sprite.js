@@ -1,11 +1,11 @@
-const knight = document.getElementById('knight');
-const SPRITE_SIZE = knight.offsetWidth;
+const player = document.getElementById('player');
+const SPRITE_SIZE = player.offsetWidth;
 
 function moveSprite(x, y) {
-  knight.style.left = x + 'px';
-  knight.style.top = y + 'px';
+  player.style.left = x + 'px';
+  player.style.top = y + 'px';
 }
 
 function faceSprite(dir) {
-  knight.style.transform = dir === 'left' ? 'scaleX(-1)' : '';
+  player.style.transform = dir === 'left' ? 'scaleX(-1)' : '';
 }

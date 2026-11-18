@@ -1,6 +1,6 @@
 body { margin: 0; height: 100vh; overflow: hidden; background: #1b1b1b; }
 
-#knight {
+#player {
   position: absolute;
   width: 100px;
   height: 100px;
