@@ -4,7 +4,7 @@ body { margin: 0; height: 100vh; overflow: hidden; background: #1b1b1b; }
   position: absolute;
   width: 100px;
   height: 100px;
-  background: url('../assets/Knight/Knight_Idle.png') 0 0 / 600px 100px no-repeat;
+  background: url('../assets/CharacterClasses/Knight/Knight_Idle.png') 0 0 / 600px 100px no-repeat;
   animation: idle 0.6s steps(6) infinite;
   image-rendering: pixelated;
 }
