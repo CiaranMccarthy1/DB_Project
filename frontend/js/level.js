@@ -1,17 +1,30 @@
 const TILE = 64;
-const SRC = 32; // source tiles in walls_floor.png are 32x32
+const SRC = 32; // source tiles in the packed sheets are 32x32
 
 const LEVEL = [
-  "################",
-  "#..............#",
-  "#..............#",
-  "#..............#",
-  "#......P......D#",
-  "#..............#",
-  "#..............#",
-  "#..............#",
-  "################",
+  "####################",
+  "#.....#......#.....#",
+  "#..P..#......#.....#",
+  "#.....#......#.....#",
+  "#..................#",
+  "#.....#......#.....D",
+  "#.....#......#.....#",
+  "#.....#......#.....#",
+  "#.....#......#.....#",
+  "#.....#......#.....#",
+  "####################",
 ];
+
+const PROPS = [
+  { x: 1, y: 8, kind: "chest" },
+  { x: 12, y: 1, kind: "crate" },
+  { x: 18, y: 8, kind: "chest" },
+];
+
+const PROP_RECTS = {
+  chest: [128, 0],
+  crate: [256, 0],
+};
 
 const canvas = document.getElementById('map');
 canvas.width = LEVEL[0].length * TILE;
@@ -28,6 +41,7 @@ const DOOR = [0, 32];
 const sheets = {
   tiles: 'assets/Building/walls_floor.png',
   doors: 'assets/Building/doors_lever_chest_animation.png',
+  objects: 'assets/Building/Objects.png',
 };
 
 const images = {};
@@ -53,13 +67,22 @@ function draw() {
       }
     }
   }
+
+  for (const prop of PROPS) {
+    const [px, py] = PROP_RECTS[prop.kind];
+    ctx.drawImage(images.objects, px, py, SRC, SRC, prop.x * TILE, prop.y * TILE, TILE, TILE);
+  }
+}
+
+function propAt(tx, ty) {
+  return PROPS.some((p) => p.x === tx && p.y === ty);
 }
 
 function isWalkable(tx, ty) {
   const row = LEVEL[ty];
   if (!row) return false;
   const tile = row[tx];
-  return tile === '.' || tile === 'P' || tile === 'D';
+  return (tile === '.' || tile === 'P' || tile === 'D') && !propAt(tx, ty);
 }
 
 function findSpawn() {
@@ -69,3 +92,12 @@ function findSpawn() {
   }
   return { x: 1, y: 1 };
 }
+
+function fitLevel() {
+  const scale = Math.min(1, innerWidth / canvas.width, innerHeight / canvas.height);
+  document.getElementById('level').style.transform =
+    `translate(-50%, -50%) scale(${scale})`;
+}
+
+addEventListener('resize', fitLevel);
+fitLevel();
