@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create Account - Java Knight</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<main class="menu">
+  <h1>Create Account</h1>
+  <form id="register-form">
+    <div><label>Username <input name="username" autocomplete="username" required autofocus></label></div>
+    <div><label>Email <input name="email" type="email" autocomplete="email" required></label></div>
+    <div><label>Password <input name="password" type="password" autocomplete="new-password" required></label></div>
+    <button type="submit">Create account</button>
+  </form>
+  <p id="register-error" role="alert"></p>
+  <p>Already have an account? <a href="index.html">Log in</a></p>
+</main>
+<script src="js/api.js"></script>
+<script src="js/register.js"></script>
+</body>
+</html>

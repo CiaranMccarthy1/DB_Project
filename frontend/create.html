@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create Character - Java Knight</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<main class="menu">
+  <h1>Create Character</h1>
+  <form id="character-form">
+    <div><label>Name <input name="name" maxlength="50" required autofocus></label></div>
+    <div><label>Class
+      <select name="class_id" required>
+        <option value="1">Soldier</option>
+        <option value="2">Knight</option>
+        <option value="3">Templar</option>
+        <option value="4">Wizard</option>
+        <option value="5">Priest</option>
+        <option value="6">Archer</option>
+      </select>
+    </label></div>
+    <button type="submit">Create character</button>
+  </form>
+  <p id="character-error" role="alert"></p>
+</main>
+<script src="js/api.js"></script>
+<script src="js/create-character.js"></script>
+</body>
+</html>
