@@ -1,4 +1,5 @@
 import os
+import secrets
 from pathlib import Path
 from typing import TypedDict
 
@@ -29,7 +30,7 @@ DB_CONFIG: DBConfig = {
 
 POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
 
-JWT_SECRET = os.environ["JWT_SECRET"]
+JWT_SECRET = os.getenv("JWT_SECRET") or secrets.token_hex(32)  # shortcut: random per process until JWT_SECRET is set
 JWT_ALGORITHM = "HS256"
 JWT_TTL_HOURS = 24
 

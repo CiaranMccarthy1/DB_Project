@@ -1,0 +1,71 @@
+const TILE = 64;
+const SRC = 32; // source tiles in walls_floor.png are 32x32
+
+const LEVEL = [
+  "################",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "#......P......D#",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "################",
+];
+
+const canvas = document.getElementById('map');
+canvas.width = LEVEL[0].length * TILE;
+canvas.height = LEVEL.length * TILE;
+
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// Crop rectangles verified against the packed sheets.
+const FLOOR = [16, 96];
+const WALL = [160, 0];
+const DOOR = [0, 32];
+
+const sheets = {
+  tiles: 'assets/Building/walls_floor.png',
+  doors: 'assets/Building/doors_lever_chest_animation.png',
+};
+
+const images = {};
+let loaded = 0;
+
+for (const [name, src] of Object.entries(sheets)) {
+  const img = new Image();
+  img.onload = () => {
+    if (++loaded === Object.keys(sheets).length) draw();
+  };
+  img.src = src;
+  images[name] = img;
+}
+
+function draw() {
+  for (let y = 0; y < LEVEL.length; y++) {
+    for (let x = 0; x < LEVEL[y].length; x++) {
+      const tile = LEVEL[y][x];
+      const [fx, fy] = tile === '#' ? WALL : FLOOR;
+      ctx.drawImage(images.tiles, fx, fy, SRC, SRC, x * TILE, y * TILE, TILE, TILE);
+      if (tile === 'D') {
+        ctx.drawImage(images.doors, DOOR[0], DOOR[1], SRC, SRC, x * TILE, y * TILE, TILE, TILE);
+      }
+    }
+  }
+}
+
+function isWalkable(tx, ty) {
+  const row = LEVEL[ty];
+  if (!row) return false;
+  const tile = row[tx];
+  return tile === '.' || tile === 'P' || tile === 'D';
+}
+
+function findSpawn() {
+  for (let y = 0; y < LEVEL.length; y++) {
+    const x = LEVEL[y].indexOf('P');
+    if (x !== -1) return { x, y };
+  }
+  return { x: 1, y: 1 };
+}

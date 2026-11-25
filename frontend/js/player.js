@@ -1,49 +1,49 @@
+const STEP_MS = 120;
+
+const DIRECTIONS = {
+  ArrowLeft: [-1, 0], a: [-1, 0],
+  ArrowRight: [1, 0], d: [1, 0],
+  ArrowUp: [0, -1], w: [0, -1],
+  ArrowDown: [0, 1], s: [0, 1],
+};
+
 class Player {
   constructor() {
-    this.keys = new Set();
-    this.speed = 200;
-    this.last = 0;
-    this.x = (innerWidth - SPRITE_SIZE) / 2;
-    this.y = (innerHeight - SPRITE_SIZE) / 2;
-
-    moveSprite(this.x, this.y);
+    const spawn = findSpawn();
+    this.tx = spawn.x;
+    this.ty = spawn.y;
+    this.moving = false;
+    this.place();
 
     addEventListener('keydown', (e) => this.onDown(e));
-    addEventListener('keyup', (e) => this.keys.delete(e.key));
-    addEventListener('blur', () => this.keys.clear());
+  }
 
-    requestAnimationFrame((now) => this.frame(now));
+  place() {
+    moveSprite(this.tx * TILE, this.ty * TILE);
   }
 
   onDown(e) {
-    if (!e.key.startsWith('Arrow') && !'wasd'.includes(e.key)) return;
-    if (!this.keys.has(e.key)) {
-      if (e.key === 'ArrowLeft' || e.key === 'a') faceSprite('left');
-      else if (e.key === 'ArrowRight' || e.key === 'd') faceSprite('right');
-    }
-    this.keys.add(e.key);
+    const dir = DIRECTIONS[e.key];
+    if (!dir) return;
     e.preventDefault();
-  }
+    if (this.moving) return;
 
-  frame(now) {
-    const dt = this.last ? (now - this.last) / 1000 : 0;
-    this.last = now;
-    const k = this.keys;
-    let dx = 0;
-    let dy = 0;
-    if (k.has('ArrowLeft') || k.has('a')) dx -= 1;
-    if (k.has('ArrowRight') || k.has('d')) dx += 1;
-    if (k.has('ArrowUp') || k.has('w')) dy -= 1;
-    if (k.has('ArrowDown') || k.has('s')) dy += 1;
-    if (dx || dy) {
-      const step = this.speed * dt / Math.hypot(dx, dy);
-      this.x += dx * step;
-      this.y += dy * step;
-      this.x = Math.max(0, Math.min(innerWidth - SPRITE_SIZE, this.x));
-      this.y = Math.max(0, Math.min(innerHeight - SPRITE_SIZE, this.y));
-      moveSprite(this.x, this.y);
-    }
-    requestAnimationFrame((t) => this.frame(t));
+    if (dir[0] < 0) faceSprite('left');
+    if (dir[0] > 0) faceSprite('right');
+
+    const tx = this.tx + dir[0];
+    const ty = this.ty + dir[1];
+    if (!isWalkable(tx, ty)) return;
+
+    this.tx = tx;
+    this.ty = ty;
+    this.moving = true;
+    this.place();
+
+    setTimeout(() => {
+      this.moving = false;
+      if (LEVEL[this.ty][this.tx] === 'D') location.href = 'menu.html';
+    }, STEP_MS);
   }
 }
 

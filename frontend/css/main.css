@@ -1,16 +1,29 @@
 body { margin: 0; height: 100vh; overflow: hidden; background: #1b1b1b; }
 
-#player {
+#level {
   position: absolute;
-  width: 100px;
-  height: 100px;
-  background: url('../assets/CharacterClasses/Knight/Knight_Idle.png') 0 0 / 600px 100px no-repeat;
-  animation: idle 0.6s steps(6) infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#map {
+  display: block;
   image-rendering: pixelated;
 }
 
+#player {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  background: url('../assets/CharacterClasses/Knight/Knight_Idle.png') -76px -64px / 1200px 200px no-repeat;
+  animation: idle 0.6s steps(6) infinite;
+  image-rendering: pixelated;
+  transition: left 0.12s linear, top 0.12s linear;
+}
+
 @keyframes idle {
-  to { background-position: -600px 0; }
+  to { background-position: -1276px -64px; }
 }
 
 .menu {

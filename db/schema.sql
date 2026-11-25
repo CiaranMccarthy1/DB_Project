@@ -1,7 +1,8 @@
 SET default_storage_engine = InnoDB;
 
-CREATE DATABASE IF NOT EXISTS java_knight_realms
-    CHARACTER SET utf8mb4;
+DROP DATABASE IF EXISTS java_knight_realms;
+
+CREATE DATABASE IF NOT EXISTS java_knight_realms;
 
 USE java_knight_realms;
 
