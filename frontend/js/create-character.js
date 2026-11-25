@@ -4,11 +4,21 @@ if (!token) location.href = 'index.html';
 const form = document.getElementById('character-form');
 const errorBox = document.getElementById('character-error');
 
+const SPRITES = {
+  1: 'Soilder/Soldier_Idle.png',
+  2: 'Knight/Knight_Idle.png',
+  3: 'Templar/Knight Templar_Idle.png',
+  4: 'Wizard/Wizard_Idle.png',
+  5: 'Priest/Priest_Idle.png',
+  6: 'Archer/Archer_Idle.png',
+};
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   errorBox.textContent = '';
 
   const data = new FormData(form);
+  const classId = Number(data.get('class_id'));
 
   try {
     const response = await fetch(`${API_BASE}/characters`, {
@@ -18,15 +28,18 @@ form.addEventListener('submit', async (event) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        name: data.get('name'),
-        class_id: Number(data.get('class_id')),
+        character_name: data.get('name'),
+        class_id: classId,
       }),
     });
     const result = await response.json().catch(() => ({}));
 
-    if (!response.ok) throw new Error(result.detail || 'Could not create character');
+    if (!response.ok) {
+      throw new Error(typeof result.detail === 'string' ? result.detail : 'Could not create character');
+    }
 
-    location.href = 'menu.html';
+    localStorage.setItem('character', SPRITES[classId]);
+    location.href = 'game.html';
   } catch (error) {
     errorBox.textContent = error.message;
   }
