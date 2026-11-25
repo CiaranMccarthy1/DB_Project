@@ -10,8 +10,19 @@
   <canvas id="map"></canvas>
   <div id="player"></div>
 </div>
+<div id="battle" hidden>
+  <h2 id="battle-title"></h2>
+  <p id="battle-stats"></p>
+  <p id="battle-log"></p>
+  <div class="battle-actions">
+    <button data-action="attack">Attack</button>
+    <button data-action="heavy">Heavy (5 mana)</button>
+    <button data-action="flee">Flee</button>
+  </div>
+</div>
 <script src="js/sprite.js"></script>
 <script src="js/level.js"></script>
+<script src="js/enemies.js"></script>
 <script src="js/player.js"></script>
 </body>
 </html>

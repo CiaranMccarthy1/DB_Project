@@ -39,6 +39,13 @@ form.addEventListener('submit', async (event) => {
     }
 
     localStorage.setItem('character', SPRITES[classId]);
+    localStorage.setItem('stats', JSON.stringify({
+      hp: result.hp,
+      max_hp: result.max_hp,
+      mana: result.mana,
+      melee: result.melee,
+      armor: result.armor,
+    }));
     location.href = 'game.html';
   } catch (error) {
     errorBox.textContent = error.message;

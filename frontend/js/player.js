@@ -26,13 +26,20 @@ class Player {
     const dir = DIRECTIONS[e.key];
     if (!dir) return;
     e.preventDefault();
-    if (this.moving) return;
+    if (this.moving || battleActive()) return;
 
     if (dir[0] < 0) faceSprite('left');
     if (dir[0] > 0) faceSprite('right');
 
     const tx = this.tx + dir[0];
     const ty = this.ty + dir[1];
+
+    const enemy = enemyAt(tx, ty);
+    if (enemy) {
+      startBattle(enemy);
+      return;
+    }
+
     if (!isWalkable(tx, ty)) return;
 
     this.tx = tx;
@@ -47,4 +54,4 @@ class Player {
   }
 }
 
-new Player();
+const gamePlayer = new Player();

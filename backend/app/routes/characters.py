@@ -27,6 +27,8 @@ class Character(BaseModel):
     hp: int
     max_hp: int
     mana: int
+    melee: int
+    armor: int
     current_level_id: int | None
     pos_x: int | None
     pos_y: int | None
@@ -74,7 +76,8 @@ def create_character(body: CharacterCreate, user_id: int = Depends(get_current_u
 
         cur.execute(
             "SELECT character_id, character_name, class_id, level, xp, hp, max_hp, mana, "
-            "current_level_id, pos_x, pos_y FROM characters WHERE character_id = %s",
+            "melee, armor, current_level_id, pos_x, pos_y "
+            "FROM characters WHERE character_id = %s",
             (character_id,),
         )
         character = cur.fetchone()
