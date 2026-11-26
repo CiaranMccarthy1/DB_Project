@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_users_username UNIQUE (username),
+    CONSTRAINT uq_users_email UNIQUE (email)
 );
 
 CREATE TABLE IF NOT EXISTS character_classes (
@@ -37,6 +39,20 @@ CREATE TABLE IF NOT EXISTS items (
     max_stack SMALLINT UNSIGNED NOT NULL DEFAULT 99
 );
 
+CREATE TABLE IF NOT EXISTS chapters (
+    chapter_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    chapter_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS levels (
+    level_id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    chapter_id TINYINT UNSIGNED NOT NULL,
+    level_name VARCHAR(50) NOT NULL,
+    width TINYINT UNSIGNED NOT NULL,
+    height TINYINT UNSIGNED NOT NULL,
+    CONSTRAINT fk_levels_chapter FOREIGN KEY (chapter_id) REFERENCES chapters (chapter_id)
+);
+
 CREATE TABLE IF NOT EXISTS characters (
     character_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
@@ -51,12 +67,16 @@ CREATE TABLE IF NOT EXISTS characters (
     ranged SMALLINT UNSIGNED NOT NULL,
     armor SMALLINT UNSIGNED NOT NULL,
     speed SMALLINT UNSIGNED NOT NULL,
-    current_level_id INT UNSIGNED NULL, 
+    current_level_id SMALLINT UNSIGNED NULL,
     pos_x SMALLINT UNSIGNED NULL,
     pos_y SMALLINT UNSIGNED NULL,
-    steps_since_enc INT UNSIGNED NOT NULL DEFAULT 0,
-    grace_steps TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_characters_name UNIQUE (user_id, character_name),
+    CONSTRAINT chk_characters_hp CHECK (hp <= max_hp),
+    CONSTRAINT chk_characters_level CHECK (level >= 1),
+    CONSTRAINT fk_characters_user FOREIGN KEY (user_id) REFERENCES users (user_id),
+    CONSTRAINT fk_characters_class FOREIGN KEY (class_id) REFERENCES character_classes (class_id),
+    CONSTRAINT fk_characters_level FOREIGN KEY (current_level_id) REFERENCES levels (level_id)
 );
 
 CREATE TABLE IF NOT EXISTS character_stats (
@@ -67,21 +87,8 @@ CREATE TABLE IF NOT EXISTS character_stats (
     dungeons_completed INT UNSIGNED NOT NULL DEFAULT 0,
     battles_won INT UNSIGNED NOT NULL DEFAULT 0,
     battles_fled INT UNSIGNED NOT NULL DEFAULT 0,
-    items_used INT UNSIGNED NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS chapters (
-    chapter_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    chapter_name VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS levels (
-    level_id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    chapter_id TINYINT UNSIGNED NOT NULL,
-    level_name VARCHAR(50) NOT NULL,
-    width TINYINT UNSIGNED NOT NULL,
-    height TINYINT UNSIGNED NOT NULL,
-    CONSTRAINT fk_levels_chapter FOREIGN KEY (chapter_id) REFERENCES chapters (chapter_id)
+    items_used INT UNSIGNED NOT NULL DEFAULT 0,
+    CONSTRAINT fk_character_stats_character FOREIGN KEY (character_id) REFERENCES characters (character_id)
 );
 
 CREATE TABLE IF NOT EXISTS level_tiles (
@@ -123,6 +130,7 @@ CREATE TABLE IF NOT EXISTS battles (
     finished_at DATETIME NULL,
     outcome ENUM('win', 'loss', 'fled') NULL,
     xp_gained INT UNSIGNED NOT NULL DEFAULT 0,
+    INDEX idx_battles_character (character_id),
     CONSTRAINT fk_battles_character FOREIGN KEY (character_id) REFERENCES characters (character_id),
     CONSTRAINT fk_battles_enemy FOREIGN KEY (enemy_id) REFERENCES enemies (enemy_id)
 );
