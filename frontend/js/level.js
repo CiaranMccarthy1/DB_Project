@@ -1,5 +1,6 @@
 const TILE = 64;
-const SRC = 32; // source tiles in the packed sheets are 32x32
+const LEVEL_ID = 1;
+const SRC = 32; 
 
 const LEVEL = [
   "####################",
@@ -33,7 +34,6 @@ canvas.height = LEVEL.length * TILE;
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-// Crop rectangles verified against the packed sheets.
 const FLOOR = [16, 96];
 const WALL = [160, 0];
 const DOOR = [0, 32];

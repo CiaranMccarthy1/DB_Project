@@ -13,6 +13,7 @@ class Player {
     this.tx = spawn.x;
     this.ty = spawn.y;
     this.moving = false;
+    this.characterId = null;
     this.place();
 
     addEventListener('keydown', (e) => this.onDown(e));
@@ -20,6 +21,15 @@ class Player {
 
   place() {
     moveSprite(this.tx * TILE, this.ty * TILE);
+  }
+
+  savePosition() {
+    if (!this.characterId) return;
+    combatRequest(`/characters/${this.characterId}/position`, 'PATCH', {
+      level_id: LEVEL_ID,
+      x: this.tx,
+      y: this.ty,
+    }).catch(() => {});
   }
 
   onDown(e) {
@@ -49,9 +59,29 @@ class Player {
 
     setTimeout(() => {
       this.moving = false;
+      this.savePosition();
       if (LEVEL[this.ty][this.tx] === 'D') location.href = 'menu.html';
     }, STEP_MS);
   }
 }
 
 const gamePlayer = new Player();
+
+(async () => {
+  try {
+    const character = await loadCharacter();
+    gamePlayer.characterId = character.character_id;
+    if (
+      character.current_level_id === LEVEL_ID &&
+      character.pos_x !== null &&
+      character.pos_y !== null &&
+      isWalkable(character.pos_x, character.pos_y)
+    ) {
+      gamePlayer.tx = character.pos_x;
+      gamePlayer.ty = character.pos_y;
+      gamePlayer.place();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+})();

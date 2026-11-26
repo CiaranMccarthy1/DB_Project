@@ -103,6 +103,18 @@ async function getCharacterId() {
   return characters[0].character_id;
 }
 
+async function loadCharacter() {
+  const character = await combatRequest(`/characters/${await getCharacterId()}`);
+  const stats = loadStats();
+  stats.hp = character.hp;
+  stats.max_hp = character.max_hp;
+  stats.mana = character.mana;
+  stats.melee = character.melee;
+  stats.armor = character.armor;
+  saveStats(stats);
+  return character;
+}
+
 function syncState(state) {
   const stats = loadStats();
   stats.hp = state.character_hp;
@@ -212,11 +224,39 @@ async function fleeBattle() {
   }
 }
 
+async function useItem() {
+  if (!battle || battle.busy || battle.over) return;
+  battle.busy = true;
+  renderBattle();
+
+  try {
+    const characterId = await getCharacterId();
+    const items = await combatRequest(`/inventory?character_id=${characterId}`);
+    if (!items.length) throw new Error('No items left');
+
+    const state = await combatRequest(`/combat/${battle.battleId}/action`, 'POST', {
+      kind: 'item',
+      item_id: items[0].item_id,
+    });
+    syncState(state);
+    if (state.finished) return;
+
+    setLog(`You used ${items[0].item_name}. ${battle.enemy.name} strikes back.`);
+    battle.busy = false;
+    renderBattle();
+  } catch (error) {
+    setLog(error.message);
+    battle.busy = false;
+    renderBattle();
+  }
+}
+
 battleEl.addEventListener('click', (event) => {
   const action = event.target.dataset.action;
   if (!action || !battle || battle.busy || battle.over) return;
   if (action === 'attack') playerAction('attack_a');
   else if (action === 'heavy') playerAction('attack_b');
+  else if (action === 'item') useItem();
   else if (action === 'flee') fleeBattle();
 });
 
