@@ -122,13 +122,14 @@ async function combatRequest(path, method = 'GET', body = null) {
 }
 
 async function getCharacterId() {
-  const stored = localStorage.getItem('character_id');
-  if (stored) return Number(stored);
-
   const characters = await combatRequest('/characters');
   if (!characters.length) throw new Error('No character found');
-  localStorage.setItem('character_id', characters[0].character_id);
-  return characters[0].character_id;
+
+  // never trust a stored id blindly: it can belong to a previous account
+  const stored = Number(localStorage.getItem('character_id'));
+  const character = characters.find((c) => c.character_id === stored) || characters[0];
+  localStorage.setItem('character_id', character.character_id);
+  return character.character_id;
 }
 
 async function loadCharacter() {

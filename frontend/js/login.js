@@ -21,6 +21,10 @@ form.addEventListener('submit', async (event) => {
     if (!response.ok) throw new Error(result.detail || 'Login failed');
     if (!result.token) throw new Error('No token returned');
 
+    // a new account must not inherit the previous session's character
+    localStorage.removeItem('character_id');
+    localStorage.removeItem('character');
+    localStorage.removeItem('stats');
     localStorage.setItem('token', result.token);
     location.href = 'menu.html';
   } catch (error) {
