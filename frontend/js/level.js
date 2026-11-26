@@ -1,48 +1,19 @@
 const TILE = 64;
 const SRC = 32;
 
-const LEVELS = {
-  1: {
-    rows: [
-      "####################",
-      "#.....#......#.....#",
-      "#..P..#......#.....#",
-      "#.....#......#.....#",
-      "#..................#",
-      "#.....#......#.....D",
-      "#.....#......#.....#",
-      "#.....#......#.....#",
-      "#.....#......#.....#",
-      "#.....#......#.....#",
-      "####################",
-    ],
-    props: [
-      { x: 1, y: 8, kind: "chest" },
-      { x: 12, y: 1, kind: "crate" },
-      { x: 18, y: 8, kind: "chest" },
-    ],
-  },
-  2: {
-    rows: [
-      "####################",
-      "#..................#",
-      "#.##..##..##..##...#",
-      "#.##..##..##..##...#",
-      "#..................#",
-      "#..................#",
-      "#.##..##..##..##...#",
-      "#.##..##..##..##...#",
-      "#..................#",
-      "#P.................#",
-      "##########D#########",
-    ],
-    props: [{ x: 17, y: 2, kind: "chest" }],
-  },
+// decorative only; the tiles themselves come from GET /levels/{id}/tiles
+const LEVEL_PROPS = {
+  1: [
+    { x: 1, y: 8, kind: "chest" },
+    { x: 12, y: 1, kind: "crate" },
+    { x: 18, y: 8, kind: "chest" },
+  ],
+  2: [{ x: 17, y: 2, kind: "chest" }],
 };
 
 let LEVEL_ID = 1;
-let LEVEL = LEVELS[1].rows;
-let PROPS = LEVELS[1].props;
+let LEVEL = null;
+let PROPS = [];
 
 const PROP_RECTS = {
   chest: [128, 0],
@@ -50,8 +21,6 @@ const PROP_RECTS = {
 };
 
 const canvas = document.getElementById('map');
-canvas.width = LEVEL[0].length * TILE;
-canvas.height = LEVEL.length * TILE;
 
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
@@ -79,6 +48,7 @@ for (const [name, src] of Object.entries(sheets)) {
 }
 
 function draw() {
+  if (!LEVEL) return;
   for (let y = 0; y < LEVEL.length; y++) {
     for (let x = 0; x < LEVEL[y].length; x++) {
       const tile = LEVEL[y][x];
@@ -96,12 +66,16 @@ function draw() {
   }
 }
 
-function loadLevel(id) {
+async function loadLevel(id) {
+  const response = await fetch(`${API_BASE}/levels/${id}/tiles`);
+  if (!response.ok) throw new Error('Map unavailable');
+  const level = await response.json();
+
   LEVEL_ID = id;
-  LEVEL = LEVELS[id].rows;
-  PROPS = LEVELS[id].props;
-  canvas.width = LEVEL[0].length * TILE;
-  canvas.height = LEVEL.length * TILE;
+  LEVEL = level.rows;
+  PROPS = LEVEL_PROPS[id] || [];
+  canvas.width = level.width * TILE;
+  canvas.height = level.height * TILE;
   draw();
   fitLevel();
   return findSpawn();
@@ -112,6 +86,7 @@ function propAt(tx, ty) {
 }
 
 function isWalkable(tx, ty) {
+  if (!LEVEL) return false;
   const row = LEVEL[ty];
   if (!row) return false;
   const tile = row[tx];
@@ -133,4 +108,3 @@ function fitLevel() {
 }
 
 addEventListener('resize', fitLevel);
-fitLevel();

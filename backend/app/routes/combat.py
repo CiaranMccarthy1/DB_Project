@@ -14,7 +14,7 @@ MANA_COST = 5
 BATTLE_STATE = """
     SELECT b.battle_id, b.character_id, b.enemy_id, b.enemy_hp, b.character_hp,
            b.character_mana, b.turn, b.finished_at, b.outcome,
-           c.melee, c.ranged, c.armor, c.max_hp,
+           c.melee, c.ranged, c.armor, c.max_hp, c.level AS level_before,
            e.melee AS enemy_melee, e.ranged AS enemy_ranged, e.armor AS enemy_armor,
            e.xp_reward,
            (SELECT item_name FROM items WHERE item_id = e.drop_item_id) AS drop_name
@@ -46,6 +46,7 @@ class Battle(BaseModel):
     outcome: Literal["win", "loss", "fled"] | None
     xp_gained: int = 0
     drop: str | None = None
+    level_up: bool = False
 
 
 def _state(row, finished: bool, outcome: str | None) -> Battle:
@@ -61,6 +62,7 @@ def _state(row, finished: bool, outcome: str | None) -> Battle:
         outcome=outcome,
         xp_gained=row.get("xp_gained", 0),
         drop=row.get("drop_name"),
+        level_up=row.get("level_up", False),
     )
 
 
@@ -155,11 +157,16 @@ def battle_action(battle_id: int, body: BattleAction, user_id: int = Depends(get
                     "UPDATE characters SET hp = max_hp WHERE character_id = %s",
                     (row["character_id"],),
                 )
+        level_up = False
+        if outcome == "win":
+            cur.execute("SELECT level FROM characters WHERE character_id = %s", (row["character_id"],))
+            level_up = cur.fetchone()["level"] > row["level_before"]
 
     return _state(
         dict(row, enemy_hp=enemy_hp, character_hp=character_hp, character_mana=mana, turn=turn,
              xp_gained=row["xp_reward"] if outcome == "win" else 0,
-             drop_name=row["drop_name"] if outcome == "win" else None),
+             drop_name=row["drop_name"] if outcome == "win" else None,
+             level_up=level_up),
         finished=outcome is not None,
         outcome=outcome,
     )

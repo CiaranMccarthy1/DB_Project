@@ -55,8 +55,6 @@ function spawnEnemies(levelId) {
   }
 }
 
-spawnEnemies(1);
-
 const battleEl = document.getElementById('battle');
 const battleTitle = document.getElementById('battle-title');
 const battleStats = document.getElementById('battle-stats');
@@ -213,6 +211,10 @@ function winBattle(state) {
   battle.over = true;
   let text = `You defeated the ${battle.enemy.name}! +${state.xp_gained} XP`;
   if (state.drop) text += ` It dropped a ${state.drop}!`;
+  if (state.level_up) {
+    text += ' Level up!';
+    loadCharacter(); // stats grew server-side; refresh the local copy
+  }
   setLog(text);
   renderBattle();
 
@@ -316,7 +318,7 @@ function stepEnemy(enemy) {
 }
 
 setInterval(() => {
-  if (battle) return;
+  if (battle || !LEVEL || !gamePlayer) return;
   for (const enemy of enemies) {
     if (Date.now() < enemy.graceUntil) continue;
     stepEnemy(enemy);

@@ -33,6 +33,18 @@ BEGIN
 
     IF p_outcome = 'win' THEN
         UPDATE characters SET xp = xp + v_xp WHERE character_id = v_character_id;
+
+        -- level up once per battle at most; extra xp carries over
+        UPDATE characters
+           SET xp = xp - (level * 100),
+               level = level + 1,
+               max_hp = max_hp + 10,
+               hp = hp + 10,
+               melee = melee + 2,
+               armor = armor + 1
+         WHERE character_id = v_character_id
+           AND xp >= level * 100;
+
         UPDATE character_stats
            SET battles_won = battles_won + 1,
                enemies_killed = enemies_killed + 1,

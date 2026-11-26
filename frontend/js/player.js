@@ -70,24 +70,29 @@ class Player {
   }
 }
 
-const gamePlayer = new Player();
+let gamePlayer = null;
 
-function enterLevel(id) {
-  const spawn = loadLevel(id);
-  gamePlayer.tx = spawn.x;
-  gamePlayer.ty = spawn.y;
-  gamePlayer.place();
-  spawnEnemies(id);
-  gamePlayer.savePosition();
+async function enterLevel(id) {
+  try {
+    const spawn = await loadLevel(id);
+    gamePlayer.tx = spawn.x;
+    gamePlayer.ty = spawn.y;
+    gamePlayer.place();
+    spawnEnemies(id);
+    gamePlayer.savePosition();
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 (async () => {
   try {
     const character = await loadCharacter();
+    const levelId = character.current_level_id || 1;
+    await loadLevel(levelId);
+    gamePlayer = new Player();
     gamePlayer.characterId = character.character_id;
-    if (LEVELS[character.current_level_id] && character.current_level_id !== LEVEL_ID) {
-      enterLevel(character.current_level_id);
-    }
+    spawnEnemies(levelId);
     if (
       character.pos_x !== null &&
       character.pos_y !== null &&
