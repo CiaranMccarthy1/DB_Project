@@ -15,7 +15,9 @@ BATTLE_STATE = """
     SELECT b.battle_id, b.character_id, b.enemy_id, b.enemy_hp, b.character_hp,
            b.character_mana, b.turn, b.finished_at, b.outcome,
            c.melee, c.ranged, c.armor, c.max_hp,
-           e.melee AS enemy_melee, e.ranged AS enemy_ranged, e.armor AS enemy_armor
+           e.melee AS enemy_melee, e.ranged AS enemy_ranged, e.armor AS enemy_armor,
+           e.xp_reward,
+           (SELECT item_name FROM items WHERE item_id = e.drop_item_id) AS drop_name
     FROM battles b
     JOIN characters c ON c.character_id = b.character_id
     JOIN enemies e ON e.enemy_id = b.enemy_id
@@ -42,6 +44,8 @@ class Battle(BaseModel):
     turn: int
     finished: bool
     outcome: Literal["win", "loss", "fled"] | None
+    xp_gained: int = 0
+    drop: str | None = None
 
 
 def _state(row, finished: bool, outcome: str | None) -> Battle:
@@ -55,6 +59,8 @@ def _state(row, finished: bool, outcome: str | None) -> Battle:
         turn=row["turn"],
         finished=finished,
         outcome=outcome,
+        xp_gained=row.get("xp_gained", 0),
+        drop=row.get("drop_name"),
     )
 
 
@@ -151,7 +157,9 @@ def battle_action(battle_id: int, body: BattleAction, user_id: int = Depends(get
                 )
 
     return _state(
-        dict(row, enemy_hp=enemy_hp, character_hp=character_hp, character_mana=mana, turn=turn),
+        dict(row, enemy_hp=enemy_hp, character_hp=character_hp, character_mana=mana, turn=turn,
+             xp_gained=row["xp_reward"] if outcome == "win" else 0,
+             drop_name=row["drop_name"] if outcome == "win" else None),
         finished=outcome is not None,
         outcome=outcome,
     )
@@ -169,4 +177,4 @@ def flee_battle(battle_id: int, user_id: int = Depends(get_current_user)):
 
         cur.execute("CALL sp_settle_battle(%s, 'fled')", (battle_id,))
 
-    return _state(row, finished=True, outcome="fled")
+    return _state(dict(row, drop_name=None), finished=True, outcome="fled")

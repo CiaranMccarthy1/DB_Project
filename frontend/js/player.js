@@ -25,11 +25,11 @@ class Player {
 
   savePosition() {
     if (!this.characterId) return;
-    combatRequest(`/characters/${this.characterId}/position`, 'PATCH', {
-      level_id: LEVEL_ID,
-      x: this.tx,
-      y: this.ty,
-    }).catch(() => {});
+    const pos = { level_id: LEVEL_ID, x: this.tx, y: this.ty };
+    // chained so rapid saves can't land out of order
+    this.saveChain = (this.saveChain ?? Promise.resolve())
+      .then(() => combatRequest(`/characters/${this.characterId}/position`, 'PATCH', pos))
+      .catch(() => {});
   }
 
   onDown(e) {
@@ -59,20 +59,36 @@ class Player {
 
     setTimeout(() => {
       this.moving = false;
-      this.savePosition();
-      if (LEVEL[this.ty][this.tx] === 'D') location.href = 'menu.html';
+      if (LEVEL[this.ty][this.tx] === 'D') {
+        // shortcut: doors are one-way progression, no return trip
+        if (LEVEL_ID === 1) enterLevel(2);
+        else location.href = 'menu.html';
+      } else {
+        this.savePosition();
+      }
     }, STEP_MS);
   }
 }
 
 const gamePlayer = new Player();
 
+function enterLevel(id) {
+  const spawn = loadLevel(id);
+  gamePlayer.tx = spawn.x;
+  gamePlayer.ty = spawn.y;
+  gamePlayer.place();
+  spawnEnemies(id);
+  gamePlayer.savePosition();
+}
+
 (async () => {
   try {
     const character = await loadCharacter();
     gamePlayer.characterId = character.character_id;
+    if (LEVELS[character.current_level_id] && character.current_level_id !== LEVEL_ID) {
+      enterLevel(character.current_level_id);
+    }
     if (
-      character.current_level_id === LEVEL_ID &&
       character.pos_x !== null &&
       character.pos_y !== null &&
       isWalkable(character.pos_x, character.pos_y)
@@ -81,6 +97,8 @@ const gamePlayer = new Player();
       gamePlayer.ty = character.pos_y;
       gamePlayer.place();
     }
+    // keep the DB in sync with wherever boot actually left the player
+    gamePlayer.savePosition();
   } catch (error) {
     console.error(error);
   }

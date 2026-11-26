@@ -188,7 +188,8 @@ VALUES
 INSERT INTO levels
     (level_id, chapter_id, level_name, width, height)
 VALUES
-    (1, 1, 'The Keep', 20, 11);
+    (1, 1, 'The Keep', 20, 11),
+    (2, 2, 'The Depths', 20, 11);
 
 INSERT INTO enemies
     (enemy_id, enemy_name, enemy_type_id, chapter_id, is_boss, hp, melee, mana, ranged, armor, speed, xp_reward, drop_item_id)

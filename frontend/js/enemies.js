@@ -2,34 +2,60 @@ const ENEMY_TYPES = {
   orc: { id: 1, name: 'Orc', sprite: 'Orc/Orc_Idle.png', hp: 55, melee: 12, armor: 5 },
   slime: { id: 2, name: 'Slime', sprite: 'Slime/Slime_Idle.png', hp: 45, melee: 6, armor: 3 },
   archer: { id: 4, name: 'Skeleton Archer', sprite: 'SkeletonArcher/Skeleton Archer_Idle.png', hp: 50, melee: 6, armor: 3 },
+  elite_orc: { id: 6, name: 'Elite Orc', sprite: 'EliteOrc/Elite Orc_Idle.png', hp: 140, melee: 20, armor: 10 },
+  orc_rider: { id: 5, name: 'Orc Rider', sprite: 'OrcRider/Orc rider_Idle.png', hp: 70, melee: 15, armor: 6 },
+  hell_hound: { id: 10, name: 'Hell Hound', sprite: 'HellHound/Hellhound_Idle.png', hp: 85, melee: 16, armor: 8 },
+  demon: { id: 8, name: 'Demon', sprite: 'Demon/Demon_A_Idle.png', hp: 75, melee: 14, armor: 7 },
+  necromancer: { id: 7, name: 'Necromancer', sprite: 'Necromancer/Necromancer_Idle.png', hp: 120, melee: 8, armor: 8 },
+  warlock: { id: 14, name: 'Warlock', sprite: 'Warlock/Warlock_Idle.png', hp: 180, melee: 10, armor: 10 },
+  flame_golem: { id: 13, name: 'Flame Golem', sprite: 'FlameGolem/Flame Golem_Idle.png', hp: 240, melee: 20, armor: 20 },
 };
 
-const SPAWNS = [
-  { type: 'orc', x: 4, y: 7 },
-  { type: 'slime', x: 9, y: 2 },
-  { type: 'archer', x: 11, y: 7 },
-  { type: 'orc', x: 16, y: 7 },
-];
+const SPAWNS = {
+  1: [
+    { type: 'orc', x: 4, y: 7 },
+    { type: 'slime', x: 9, y: 2 },
+    { type: 'archer', x: 11, y: 7 },
+    { type: 'orc', x: 16, y: 7 },
+    { type: 'elite_orc', x: 18, y: 5 },
+  ],
+  2: [
+    { type: 'orc_rider', x: 4, y: 5 },
+    { type: 'hell_hound', x: 15, y: 8 },
+    { type: 'demon', x: 17, y: 5 },
+    { type: 'necromancer', x: 2, y: 5 },
+    { type: 'warlock', x: 17, y: 1 },
+    { type: 'flame_golem', x: 10, y: 8 },
+  ],
+};
 
 const DEFAULT_STATS = { hp: 100, max_hp: 100, mana: 20, melee: 14, armor: 8 };
 
-const enemies = SPAWNS.map((spawn) => {
-  const type = ENEMY_TYPES[spawn.type];
-  const el = document.createElement('div');
-  el.className = 'enemy';
-  el.style.left = spawn.x * TILE + 'px';
-  el.style.top = spawn.y * TILE + 'px';
-  el.style.backgroundImage = `url('assets/Enemies/${type.sprite}')`;
-  document.getElementById('level').append(el);
-  return {
-    ...type,
-    x: spawn.x,
-    y: spawn.y,
-    maxHp: type.hp,
-    el,
-    graceUntil: 0,
-  };
-});
+const enemies = [];
+
+function spawnEnemies(levelId) {
+  for (const enemy of enemies) enemy.el.remove();
+  enemies.length = 0;
+  for (const spawn of SPAWNS[levelId]) {
+    const type = ENEMY_TYPES[spawn.type];
+    const el = document.createElement('div');
+    el.className = 'enemy';
+    el.style.left = spawn.x * TILE + 'px';
+    el.style.top = spawn.y * TILE + 'px';
+    el.style.backgroundImage = `url('assets/Enemies/${type.sprite}')`;
+    document.getElementById('level').append(el);
+    enemies.push({
+      ...type,
+      x: spawn.x,
+      y: spawn.y,
+      maxHp: type.hp,
+      el,
+      graceUntil: 0,
+    });
+  }
+}
+
+spawnEnemies(1);
 
 const battleEl = document.getElementById('battle');
 const battleTitle = document.getElementById('battle-title');
@@ -123,7 +149,7 @@ function syncState(state) {
   battle.enemy.hp = state.enemy_hp;
 
   if (state.finished) {
-    if (state.outcome === 'win') winBattle();
+    if (state.outcome === 'win') winBattle(state);
     else if (state.outcome === 'loss') loseBattle();
   }
 }
@@ -183,9 +209,11 @@ async function playerAction(kind) {
   }
 }
 
-function winBattle() {
+function winBattle(state) {
   battle.over = true;
-  setLog(`You defeated the ${battle.enemy.name}!`);
+  let text = `You defeated the ${battle.enemy.name}! +${state.xp_gained} XP`;
+  if (state.drop) text += ` It dropped a ${state.drop}!`;
+  setLog(text);
   renderBattle();
 
   const enemy = battle.enemy;

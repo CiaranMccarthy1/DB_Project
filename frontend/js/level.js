@@ -1,26 +1,48 @@
 const TILE = 64;
-const LEVEL_ID = 1;
-const SRC = 32; 
+const SRC = 32;
 
-const LEVEL = [
-  "####################",
-  "#.....#......#.....#",
-  "#..P..#......#.....#",
-  "#.....#......#.....#",
-  "#..................#",
-  "#.....#......#.....D",
-  "#.....#......#.....#",
-  "#.....#......#.....#",
-  "#.....#......#.....#",
-  "#.....#......#.....#",
-  "####################",
-];
+const LEVELS = {
+  1: {
+    rows: [
+      "####################",
+      "#.....#......#.....#",
+      "#..P..#......#.....#",
+      "#.....#......#.....#",
+      "#..................#",
+      "#.....#......#.....D",
+      "#.....#......#.....#",
+      "#.....#......#.....#",
+      "#.....#......#.....#",
+      "#.....#......#.....#",
+      "####################",
+    ],
+    props: [
+      { x: 1, y: 8, kind: "chest" },
+      { x: 12, y: 1, kind: "crate" },
+      { x: 18, y: 8, kind: "chest" },
+    ],
+  },
+  2: {
+    rows: [
+      "####################",
+      "#..................#",
+      "#.##..##..##..##...#",
+      "#.##..##..##..##...#",
+      "#..................#",
+      "#..................#",
+      "#.##..##..##..##...#",
+      "#.##..##..##..##...#",
+      "#..................#",
+      "#P.................#",
+      "##########D#########",
+    ],
+    props: [{ x: 17, y: 2, kind: "chest" }],
+  },
+};
 
-const PROPS = [
-  { x: 1, y: 8, kind: "chest" },
-  { x: 12, y: 1, kind: "crate" },
-  { x: 18, y: 8, kind: "chest" },
-];
+let LEVEL_ID = 1;
+let LEVEL = LEVELS[1].rows;
+let PROPS = LEVELS[1].props;
 
 const PROP_RECTS = {
   chest: [128, 0],
@@ -72,6 +94,17 @@ function draw() {
     const [px, py] = PROP_RECTS[prop.kind];
     ctx.drawImage(images.objects, px, py, SRC, SRC, prop.x * TILE, prop.y * TILE, TILE, TILE);
   }
+}
+
+function loadLevel(id) {
+  LEVEL_ID = id;
+  LEVEL = LEVELS[id].rows;
+  PROPS = LEVELS[id].props;
+  canvas.width = LEVEL[0].length * TILE;
+  canvas.height = LEVEL.length * TILE;
+  draw();
+  fitLevel();
+  return findSpawn();
 }
 
 function propAt(tx, ty) {
