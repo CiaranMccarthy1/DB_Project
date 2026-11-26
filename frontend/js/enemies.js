@@ -1,7 +1,7 @@
 const ENEMY_TYPES = {
-  orc: { name: 'Orc', sprite: 'Orc/Orc_Idle.png', hp: 55, melee: 12, armor: 5 },
-  slime: { name: 'Slime', sprite: 'Slime/Slime_Idle.png', hp: 45, melee: 6, armor: 3 },
-  archer: { name: 'Skeleton Archer', sprite: 'SkeletonArcher/Skeleton Archer_Idle.png', hp: 50, melee: 6, armor: 3 },
+  orc: { id: 1, name: 'Orc', sprite: 'Orc/Orc_Idle.png', hp: 55, melee: 12, armor: 5 },
+  slime: { id: 2, name: 'Slime', sprite: 'Slime/Slime_Idle.png', hp: 45, melee: 6, armor: 3 },
+  archer: { id: 4, name: 'Skeleton Archer', sprite: 'SkeletonArcher/Skeleton Archer_Idle.png', hp: 50, melee: 6, armor: 3 },
 };
 
 const SPAWNS = [
@@ -76,12 +76,68 @@ function renderBattle() {
   }
 }
 
-function startBattle(enemy) {
+async function combatRequest(path, method = 'GET', body = null) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(typeof result.detail === 'string' ? result.detail : 'Battle failed');
+  }
+  return result;
+}
+
+async function getCharacterId() {
+  const stored = localStorage.getItem('character_id');
+  if (stored) return Number(stored);
+
+  const characters = await combatRequest('/characters');
+  if (!characters.length) throw new Error('No character found');
+  localStorage.setItem('character_id', characters[0].character_id);
+  return characters[0].character_id;
+}
+
+function syncState(state) {
+  const stats = loadStats();
+  stats.hp = state.character_hp;
+  stats.mana = state.character_mana;
+  saveStats(stats);
+  battle.enemy.hp = state.enemy_hp;
+
+  if (state.finished) {
+    if (state.outcome === 'win') winBattle();
+    else if (state.outcome === 'loss') loseBattle();
+  }
+}
+
+async function startBattle(enemy) {
   if (battle) return;
-  battle = { enemy, busy: false, over: false };
+  battle = { enemy, battleId: null, busy: true, over: false };
   battleEl.hidden = false;
   setLog(`A ${enemy.name} attacks!`);
   renderBattle();
+
+  try {
+    const characterId = await getCharacterId();
+    const state = await combatRequest('/combat/start', 'POST', {
+      character_id: characterId,
+      enemy_id: enemy.id,
+    });
+    battle.battleId = state.battle_id;
+    syncState(state);
+    battle.busy = false;
+    renderBattle();
+  } catch (error) {
+    battle = null;
+    battleEl.hidden = true;
+    console.error(error);
+  }
 }
 
 function closeBattle() {
@@ -89,54 +145,30 @@ function closeBattle() {
   battle = null;
 }
 
-function playerAttack(multiplier, manaCost) {
-  const stats = loadStats();
-  if (manaCost) {
-    if (stats.mana < manaCost) {
-      setLog('Not enough mana.');
-      return;
-    }
-    stats.mana -= manaCost;
-    saveStats(stats);
-  }
-
-  const damage = Math.max(
-    1,
-    Math.round(stats.melee * multiplier) - Math.floor(battle.enemy.armor / 2) + rand(-2, 2),
-  );
-  battle.enemy.hp -= damage;
-  setLog(`You hit ${battle.enemy.name} for ${damage}.`);
-  renderBattle();
-
-  if (battle.enemy.hp <= 0) {
-    winBattle();
-    return;
-  }
-
+async function playerAction(kind) {
+  if (!battle || battle.busy || battle.over) return;
   battle.busy = true;
   renderBattle();
-  setTimeout(enemyTurn, 450);
-}
 
-function enemyTurn() {
-  if (!battle || battle.over) return;
   const stats = loadStats();
-  const damage = Math.max(
-    1,
-    battle.enemy.melee - Math.floor(stats.armor / 2) + rand(-2, 2),
-  );
-  stats.hp -= damage;
-  saveStats(stats);
-  setLog(`${battle.enemy.name} hits you for ${damage}.`);
-  renderBattle();
+  const hpBefore = stats.hp;
+  const enemyBefore = battle.enemy.hp;
 
-  if (stats.hp <= 0) {
-    loseBattle();
-    return;
+  try {
+    const state = await combatRequest(`/combat/${battle.battleId}/action`, 'POST', { kind });
+    syncState(state);
+    if (state.finished) return;
+
+    const dealt = Math.max(0, enemyBefore - state.enemy_hp);
+    const taken = Math.max(0, hpBefore - state.character_hp);
+    setLog(`You hit for ${dealt}. ${battle.enemy.name} hits you for ${taken}.`);
+    battle.busy = false;
+    renderBattle();
+  } catch (error) {
+    setLog(error.message);
+    battle.busy = false;
+    renderBattle();
   }
-
-  battle.busy = false;
-  renderBattle();
 }
 
 function winBattle() {
@@ -163,17 +195,28 @@ function loseBattle() {
   setTimeout(() => { location.href = 'menu.html'; }, 1400);
 }
 
-function fleeBattle() {
-  const enemy = battle.enemy;
-  closeBattle();
-  enemy.graceUntil = Date.now() + 3000;
+async function fleeBattle() {
+  if (!battle || battle.busy || battle.over) return;
+  battle.busy = true;
+  renderBattle();
+
+  try {
+    await combatRequest(`/combat/${battle.battleId}/flee`, 'POST');
+    const enemy = battle.enemy;
+    closeBattle();
+    enemy.graceUntil = Date.now() + 3000;
+  } catch (error) {
+    setLog(error.message);
+    battle.busy = false;
+    renderBattle();
+  }
 }
 
 battleEl.addEventListener('click', (event) => {
   const action = event.target.dataset.action;
   if (!action || !battle || battle.busy || battle.over) return;
-  if (action === 'attack') playerAttack(1, 0);
-  else if (action === 'heavy') playerAttack(1.6, 5);
+  if (action === 'attack') playerAction('attack_a');
+  else if (action === 'heavy') playerAction('attack_b');
   else if (action === 'flee') fleeBattle();
 });
 

@@ -39,6 +39,7 @@ form.addEventListener('submit', async (event) => {
     }
 
     localStorage.setItem('character', SPRITES[classId]);
+    localStorage.setItem('character_id', result.character_id);
     localStorage.setItem('stats', JSON.stringify({
       hp: result.hp,
       max_hp: result.max_hp,

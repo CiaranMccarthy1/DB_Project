@@ -144,6 +144,11 @@ def battle_action(battle_id: int, body: BattleAction, user_id: int = Depends(get
         )
         if outcome is not None:
             cur.execute("CALL sp_settle_battle(%s, %s)", (battle_id, outcome))
+            if outcome == "loss":
+                cur.execute(
+                    "UPDATE characters SET hp = max_hp WHERE character_id = %s",
+                    (row["character_id"],),
+                )
 
     return _state(
         dict(row, enemy_hp=enemy_hp, character_hp=character_hp, character_mana=mana, turn=turn),
