@@ -1,15 +1,19 @@
+// presentation data only: the server is authoritative for all combat math
 const ENEMY_TYPES = {
-  orc: { id: 1, name: 'Orc', sprite: 'Orc/Orc_Idle.png', hp: 55, melee: 12, armor: 5 },
-  slime: { id: 2, name: 'Slime', sprite: 'Slime/Slime_Idle.png', hp: 45, melee: 6, armor: 3 },
-  archer: { id: 4, name: 'Skeleton Archer', sprite: 'SkeletonArcher/Skeleton Archer_Idle.png', hp: 50, melee: 6, armor: 3 },
-  elite_orc: { id: 6, name: 'Elite Orc', sprite: 'EliteOrc/Elite Orc_Idle.png', hp: 140, melee: 20, armor: 10 },
-  hell_bat: { id: 11, name: 'Hell Bat', sprite: 'HellBat/Hellbat_Flying.png', hp: 55, melee: 8, armor: 4 },
-  hell_hound: { id: 10, name: 'Hell Hound', sprite: 'HellHound/Hellhound_Idle.png', hp: 85, melee: 16, armor: 8 },
-  demon: { id: 8, name: 'Demon', sprite: 'Demon/Demon_A_Idle.png', hp: 75, melee: 14, armor: 7 },
-  necromancer: { id: 7, name: 'Necromancer', sprite: 'Necromancer/Necromancer_Idle.png', hp: 120, melee: 8, armor: 8 },
-  warlock: { id: 14, name: 'Warlock', sprite: 'Warlock/Warlock_Idle.png', hp: 180, melee: 10, armor: 10 },
-  flame_golem: { id: 13, name: 'Flame Golem', sprite: 'FlameGolem/Flame Golem_Idle.png', hp: 240, melee: 20, armor: 20 },
+  orc: { id: 1, name: 'Orc', sprite: 'Orc/Orc_Idle.png', hp: 55 },
+  slime: { id: 2, name: 'Slime', sprite: 'Slime/Slime_Idle.png', hp: 45 },
+  archer: { id: 4, name: 'Skeleton Archer', sprite: 'SkeletonArcher/Skeleton Archer_Idle.png', hp: 50 },
+  elite_orc: { id: 6, name: 'Elite Orc', sprite: 'EliteOrc/Elite Orc_Idle.png', hp: 140 },
+  hell_bat: { id: 11, name: 'Hell Bat', sprite: 'HellBat/Hellbat_Flying.png', hp: 55 },
+  hell_hound: { id: 10, name: 'Hell Hound', sprite: 'HellHound/Hellhound_Idle.png', hp: 85 },
+  demon: { id: 8, name: 'Demon', sprite: 'Demon/Demon_A_Idle.png', hp: 75 },
+  necromancer: { id: 7, name: 'Necromancer', sprite: 'Necromancer/Necromancer_Idle.png', hp: 120 },
+  warlock: { id: 14, name: 'Warlock', sprite: 'Warlock/Warlock_Idle.png', hp: 180 },
+  flame_golem: { id: 13, name: 'Flame Golem', sprite: 'FlameGolem/Flame Golem_Idle.png', hp: 240 },
 };
+
+const ENEMY_BY_ID = {};
+for (const type of Object.values(ENEMY_TYPES)) ENEMY_BY_ID[type.id] = type;
 
 const SPAWNS = {
   1: [
@@ -166,6 +170,11 @@ async function startBattle(enemy) {
       enemy_id: enemy.id,
     });
     battle.battleId = state.battle_id;
+    if (state.enemy_id !== enemy.id) {
+      // the server resumed an open battle against a different enemy
+      const actual = ENEMY_BY_ID[state.enemy_id];
+      if (actual) battle.enemy = { ...actual, x: enemy.x, y: enemy.y, el: null };
+    }
     syncState(state);
     battle.busy = false;
     renderBattle();
@@ -219,8 +228,11 @@ function winBattle(state) {
   renderBattle();
 
   const enemy = battle.enemy;
-  enemies.splice(enemies.indexOf(enemy), 1);
-  enemy.el.remove();
+  const index = enemies.indexOf(enemy);
+  if (index !== -1) {
+    enemies.splice(index, 1);
+    enemy.el.remove();
+  }
 
   setTimeout(closeBattle, 900);
 }
