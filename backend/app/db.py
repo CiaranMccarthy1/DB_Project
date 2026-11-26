@@ -38,6 +38,10 @@ def transaction():
         conn.close()
 
 
+def is_duplicate_key(e) -> bool:
+    return e.errno == 1062 or "Duplicate entry" in str(e)
+
+
 def fetch_one(sql: str, params: tuple[Any, ...] = ()):
     with transaction() as cur:
         cur.execute(sql, params)

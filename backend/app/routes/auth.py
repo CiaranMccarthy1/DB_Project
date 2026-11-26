@@ -1,8 +1,9 @@
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
+from mysql.connector import Error as MySQLError
 from pydantic import BaseModel, EmailStr
 
-from ..db import transaction
+from ..db import is_duplicate_key, transaction
 from ..security import create_token, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -41,10 +42,16 @@ def register(body: Register):
         if cur.fetchone():
             raise HTTPException(status_code=409, detail="Username or email already in use")
 
-        cur.execute(
-            "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
-            (body.username, body.email, password_hash),
-        )
+        try:
+            cur.execute(
+                "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
+                (body.username, body.email, password_hash),
+            )
+        except MySQLError as e:
+            # lost the race past the pre-check; the unique key is the real guarantee
+            if is_duplicate_key(e):
+                raise HTTPException(status_code=409, detail="Username or email already in use")
+            raise
         user_id = cur.lastrowid
 
     if user_id is None:

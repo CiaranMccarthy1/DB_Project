@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+from mysql.connector import Error as MySQLError
 from pydantic import BaseModel
 
-from ..db import transaction
+from ..db import is_duplicate_key, transaction
 from ..security import get_current_user
 
 router = APIRouter(prefix="/characters", tags=["characters"])
@@ -58,23 +59,29 @@ def create_character(body: CharacterCreate, user_id: int = Depends(get_current_u
         if cls is None:
             raise HTTPException(status_code=400, detail="Unknown class")
 
-        cur.execute(
-            "INSERT INTO characters "
-            "(user_id, class_id, character_name, hp, max_hp, melee, mana, ranged, armor, speed) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (
-                user_id,
-                body.class_id,
-                body.character_name,
-                cls["base_hp"],
-                cls["base_hp"],
-                cls["base_melee"],
-                cls["base_mana"],
-                cls["base_ranged"],
-                cls["base_armor"],
-                cls["base_speed"],
-            ),
-        )
+        try:
+            cur.execute(
+                "INSERT INTO characters "
+                "(user_id, class_id, character_name, hp, max_hp, melee, mana, ranged, armor, speed) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    user_id,
+                    body.class_id,
+                    body.character_name,
+                    cls["base_hp"],
+                    cls["base_hp"],
+                    cls["base_melee"],
+                    cls["base_mana"],
+                    cls["base_ranged"],
+                    cls["base_armor"],
+                    cls["base_speed"],
+                ),
+            )
+        except MySQLError as e:
+            # no pre-check here: the unique key (user_id, character_name) is the guarantee
+            if is_duplicate_key(e):
+                raise HTTPException(status_code=409, detail="Character name already in use")
+            raise
         character_id = cur.lastrowid
         cur.execute(
             "INSERT INTO character_stats (character_id) VALUES (%s)",

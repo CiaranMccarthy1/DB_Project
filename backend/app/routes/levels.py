@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from ..db import transaction
 
+chapters = APIRouter(prefix="/chapters", tags=["chapters"])
 router = APIRouter(prefix="/levels", tags=["levels"])
 
 TILE_CHARS = {"wall": "#", "floor": ".", "spawn": "P", "door": "D"}
@@ -51,14 +52,14 @@ def get_level_tiles(level_id: int):
     )
 
 
-@router.get("", response_model=list[Chapter])
+@chapters.get("", response_model=list[Chapter])
 def list_chapters():
     with transaction() as cur:
         cur.execute("SELECT chapter_id, chapter_name FROM chapters ORDER BY chapter_id")
         return [Chapter(**row) for row in cur.fetchall()]
 
 
-@router.get("/{chapter_id}", response_model=Chapter)
+@chapters.get("/{chapter_id}", response_model=Chapter)
 def get_chapter(chapter_id: int):
     with transaction() as cur:
         cur.execute(

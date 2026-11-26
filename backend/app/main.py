@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 
-for router in (auth.router, characters.router, levels.router, combat.router, inventory.router, demo.router):
+for router in (auth.router, characters.router, levels.chapters, levels.router, combat.router, inventory.router, demo.router):
     app.include_router(router)
 
 

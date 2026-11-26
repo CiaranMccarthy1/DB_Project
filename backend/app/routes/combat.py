@@ -11,6 +11,8 @@ router = APIRouter(prefix="/combat", tags=["combat"])
 
 MANA_COST = 5
 
+# lock order across the app: battles row first, then characters, then inventory;
+# InnoDB deadlock detection rolls back one victim, so no cycle can hang the app
 BATTLE_STATE = """
     SELECT b.battle_id, b.character_id, b.enemy_id, b.enemy_hp, b.character_hp,
            b.character_mana, b.turn, b.finished_at, b.outcome,
@@ -79,6 +81,29 @@ def start_battle(body: BattleStart, user_id: int = Depends(get_current_user)):
         character = cur.fetchone()
         if character is None:
             raise HTTPException(status_code=404, detail="Character not found")
+
+        # a character resumes their newest open battle instead of opening a second
+        # (enemy_hp IS NOT NULL skips seeded history rows that never had state)
+        cur.execute(
+            "SELECT battle_id, enemy_id, enemy_hp, character_hp, character_mana, turn "
+            "FROM battles "
+            "WHERE character_id = %s AND finished_at IS NULL AND enemy_hp IS NOT NULL "
+            "ORDER BY battle_id DESC FOR UPDATE",
+            (body.character_id,),
+        )
+        open_battle = cur.fetchone()
+        if open_battle is not None:
+            return Battle(
+                battle_id=open_battle["battle_id"],
+                character_id=body.character_id,
+                enemy_id=open_battle["enemy_id"],
+                enemy_hp=open_battle["enemy_hp"],
+                character_hp=open_battle["character_hp"],
+                character_mana=open_battle["character_mana"],
+                turn=open_battle["turn"],
+                finished=False,
+                outcome=None,
+            )
 
         cur.execute(
             "SELECT hp, chapter_id FROM enemies WHERE enemy_id = %s",
