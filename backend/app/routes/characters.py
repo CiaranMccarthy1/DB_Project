@@ -36,7 +36,14 @@ class Character(BaseModel):
 
 @router.get("", response_model=list[Character])
 def list_characters(user_id: int = Depends(get_current_user)):
-    raise HTTPException(status_code=501, detail="Not implemented")
+    with transaction() as cur:
+        cur.execute(
+            "SELECT character_id, character_name, class_id, level, xp, hp, max_hp, mana, "
+            "melee, armor, current_level_id, pos_x, pos_y "
+            "FROM characters WHERE user_id = %s ORDER BY character_id",
+            (user_id,),
+        )
+        return [Character(**row) for row in cur.fetchall()]
 
 
 @router.post("", response_model=Character, status_code=201)
@@ -87,9 +94,38 @@ def create_character(body: CharacterCreate, user_id: int = Depends(get_current_u
 
 @router.get("/{character_id}", response_model=Character)
 def get_character(character_id: int, user_id: int = Depends(get_current_user)):
-    raise HTTPException(status_code=501, detail="Not implemented")
+    with transaction() as cur:
+        cur.execute(
+            "SELECT character_id, character_name, class_id, level, xp, hp, max_hp, mana, "
+            "melee, armor, current_level_id, pos_x, pos_y "
+            "FROM characters WHERE character_id = %s AND user_id = %s",
+            (character_id, user_id),
+        )
+        row = cur.fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return Character(**row)
 
 
 @router.patch("/{character_id}/position", response_model=Character)
 def save_position(character_id: int, body: Position, user_id: int = Depends(get_current_user)):
-    raise HTTPException(status_code=501, detail="Not implemented")
+    with transaction() as cur:
+        cur.execute(
+            "SELECT character_id FROM characters WHERE character_id = %s AND user_id = %s",
+            (character_id, user_id),
+        )
+        if cur.fetchone() is None:
+            raise HTTPException(status_code=404, detail="Character not found")
+
+        cur.execute(
+            "UPDATE characters SET current_level_id = %s, pos_x = %s, pos_y = %s "
+            "WHERE character_id = %s",
+            (body.level_id, body.x, body.y, character_id),
+        )
+        cur.execute(
+            "SELECT character_id, character_name, class_id, level, xp, hp, max_hp, mana, "
+            "melee, armor, current_level_id, pos_x, pos_y "
+            "FROM characters WHERE character_id = %s",
+            (character_id,),
+        )
+        return Character(**cur.fetchone())
