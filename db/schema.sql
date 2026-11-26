@@ -70,6 +70,11 @@ CREATE TABLE IF NOT EXISTS character_stats (
     items_used INT UNSIGNED NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS chapters (
+    chapter_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    chapter_name VARCHAR(50) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS enemy_types (
     enemy_type_id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     type_name VARCHAR(30) NOT NULL
@@ -88,7 +93,8 @@ CREATE TABLE IF NOT EXISTS enemies (
     armor SMALLINT UNSIGNED NOT NULL,
     speed SMALLINT UNSIGNED NOT NULL,
     xp_reward INT UNSIGNED NOT NULL,
-    drop_item_id TINYINT UNSIGNED NULL
+    drop_item_id TINYINT UNSIGNED NULL,
+    CONSTRAINT fk_enemies_chapter FOREIGN KEY (chapter_id) REFERENCES chapters (chapter_id)
 );
 
 -- creates character classes 
@@ -120,6 +126,12 @@ VALUES
     (4, 'demon'),
     (5, 'ooze'),
     (6, 'construct');
+
+INSERT INTO chapters
+    (chapter_id, chapter_name)
+VALUES
+    (1, 'The Keep'),
+    (2, 'The Depths');
 
 INSERT INTO enemies
     (enemy_id, enemy_name, enemy_type_id, chapter_id, is_boss, hp, melee, mana, ranged, armor, speed, xp_reward, drop_item_id)
