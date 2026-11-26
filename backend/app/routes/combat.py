@@ -70,17 +70,26 @@ def _state(row, finished: bool, outcome: str | None) -> Battle:
 def start_battle(body: BattleStart, user_id: int = Depends(get_current_user)):
     with transaction() as cur:
         cur.execute(
-            "SELECT hp, mana FROM characters WHERE character_id = %s AND user_id = %s",
+            "SELECT c.hp, c.mana, l.chapter_id "
+            "FROM characters c "
+            "JOIN levels l ON l.level_id = COALESCE(c.current_level_id, 1) "
+            "WHERE c.character_id = %s AND c.user_id = %s",
             (body.character_id, user_id),
         )
         character = cur.fetchone()
         if character is None:
             raise HTTPException(status_code=404, detail="Character not found")
 
-        cur.execute("SELECT hp FROM enemies WHERE enemy_id = %s", (body.enemy_id,))
+        cur.execute(
+            "SELECT hp, chapter_id FROM enemies WHERE enemy_id = %s",
+            (body.enemy_id,),
+        )
         enemy = cur.fetchone()
         if enemy is None:
             raise HTTPException(status_code=404, detail="Enemy not found")
+        # trust boundary: enemies only fight in their own chapter
+        if enemy["chapter_id"] != character["chapter_id"]:
+            raise HTTPException(status_code=400, detail="Enemy does not appear in this chapter")
 
         cur.execute(
             "INSERT INTO battles "

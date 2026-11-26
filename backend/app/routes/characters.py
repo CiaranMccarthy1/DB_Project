@@ -117,6 +117,16 @@ def save_position(character_id: int, body: Position, user_id: int = Depends(get_
         if cur.fetchone() is None:
             raise HTTPException(status_code=404, detail="Character not found")
 
+        # trust boundary: only floor/spawn/door tiles are legal standing spots
+        cur.execute(
+            "SELECT tile_kind FROM level_tiles "
+            "WHERE level_id = %s AND pos_x = %s AND pos_y = %s",
+            (body.level_id, body.x, body.y),
+        )
+        tile = cur.fetchone()
+        if tile is None or tile["tile_kind"] not in ("floor", "spawn", "door"):
+            raise HTTPException(status_code=400, detail="Position is not a walkable tile")
+
         cur.execute(
             "UPDATE characters SET current_level_id = %s, pos_x = %s, pos_y = %s "
             "WHERE character_id = %s",
